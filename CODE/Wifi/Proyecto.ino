@@ -14,13 +14,15 @@ const char* password = "%yatengowifi%";
 const char* host = "data.sparkfun.com";
 const char* streamId   = "....................";
 const char* privateKey = "....................";
+String writeAPIKeyM = "7J5F3NW8FDLOJDX8";
+
 
 void setup() {
   Serial.begin(115200);
   delay(10);
 
   // We start by connecting to a WiFi network
-
+  // Se comienza conectando a la WiFi
   Serial.println();
   Serial.println();
   Serial.print("Connecting to ");
