@@ -91,7 +91,7 @@ BMP085_type Read_BMP085( )
    Serial.print(BMP085_reading.BMP085_Pa, 0); //whole number only.
    Serial.print(" Pa = ");
    Serial.print(BMP085_reading.BMP085_ATM, 4); //display 4 decimal places
-   Serial.print("Altitude: ");
+   Serial.print("Atm; Altitude: ");
    Serial.print(BMP085_reading.BMP085_H, 2); //display 2 decimal places
    Serial.println(" m");
    Serial.println();
@@ -103,7 +103,7 @@ BMP085_type Read_BMP085( )
 void loop() {
 
   //Read the BMP085 barometer
-  Read_BMP085();
+  BMP085_data = Read_BMP085();
   // Write data
   Serial.print(" BMP085 T: ");
   Serial.print(BMP085_data.BMP085_T, 2); //display 2 decimal places
@@ -111,7 +111,7 @@ void loop() {
   Serial.print(BMP085_data.BMP085_Pa, 0); //whole number only.
   Serial.print(" Pa = ");
   Serial.print(BMP085_data.BMP085_ATM, 4); //display 4 decimal places
-  Serial.print("Altitude: ");
+  Serial.print("Atm; Altitude: ");
   Serial.print(BMP085_data.BMP085_H, 2); //display 2 decimal places
   Serial.println(" m");
   Serial.println();
