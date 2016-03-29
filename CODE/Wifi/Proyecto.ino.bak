@@ -80,10 +80,10 @@ BMP085_type Read_BMP085( )
    BMP085_reading.BMP085_T =
       BMP085_BAROMETER.bmp085GetTemperature(BMP085_BAROMETER.bmp085ReadUT());
 
-   //Get the pressure
+   //Get the presure
    BMP085_reading.BMP085_Pa = 
       BMP085_BAROMETER.bmp085GetPressure(BMP085_BAROMETER.bmp085ReadUP());
-   BMP085_reading.BMP085_ATM = BMP085_reading.BMP085_Pa / 101325;
+   BMP085_reading.BMP085_ATM = BMP085_data.BMP085_Pa / 101325;
 
    //Uncompensated caculation - in Meters
    BMP085_reading.BMP085_H =
@@ -96,7 +96,7 @@ BMP085_type Read_BMP085( )
    Serial.print(BMP085_reading.BMP085_Pa, 0); //whole number only.
    Serial.print(" Pa = ");
    Serial.print(BMP085_reading.BMP085_ATM, 4); //display 4 decimal places
-   Serial.print(" Atm.  Altitude: ");
+   Serial.print("Atm.  Altitude: ");
    Serial.print(BMP085_reading.BMP085_H, 2); //display 2 decimal places
    Serial.println(" m");
    Serial.println();
@@ -117,7 +117,7 @@ void loop() {
    Serial.print(BMP085_data.BMP085_Pa, 0); //whole number only.
    Serial.print(" Pa = ");
    Serial.print(BMP085_data.BMP085_ATM, 4); //display 4 decimal places
-   Serial.print(" Atm.  Altitude: ");
+   Serial.print("Atm.  Altitude: ");
    Serial.print(BMP085_data.BMP085_H, 2); //display 2 decimal places
    Serial.println(" m");
    Serial.println();
