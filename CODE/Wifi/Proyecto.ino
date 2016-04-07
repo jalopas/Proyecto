@@ -55,11 +55,12 @@ SFE_BMP180 pressure;
 
 typedef struct BMP180_type
 {
-   char    BMP180_status    = 0; // Whether the sensor is ready or not.
-   double  BMP180_Initial_P = 0; // Reference pressure to calculate elevation differences.
+   char    BMP180_status    = 0; // Whether the sensor give data or not.
    double  BMP180_Pa        = 0; // Read pressure in mBar.
    double  BMP180_H         = 0; // Elevation in m.
    double  BMP180_T         = 0; // Read Temperature ºC.
+   double  BMP180_Initial_P = 0; // Reference pressure to calculate elevation
+                                 // differences.
 };
 BMP180_type BMP180_data;
 
@@ -165,31 +166,50 @@ void Start_BMP180_Sensor() {
                pressure.getPressure
                   (BMP180_data.BMP180_Initial_P, BMP180_data.BMP180_T);
          }
+         else Serial.println("Error 3. Presure is not initialised.\n");
       }
+      else Serial.println("Error 2. Temperature is not available.\n");
    }
+   else Serial.println("Error 1. Temperature is not initialised.\n");
+
    // Write results
    Serial.print(" BMP085 T: ");
    Serial.print(BMP180_data.BMP180_T, 2); //display 2 decimal places
-   Serial.print(" ºC  P: ");
-   Serial.print(BMP180_data.BMP180_Pa, 0); //whole number only.
-   Serial.print(" mBar.  Altitude: ");
-   Serial.print(BMP180_data.BMP180_H, 2); //display 2 decimal places
-   Serial.println(" m");
+   Serial.print(" ºC  Pres Inicial: ");
+   Serial.print(BMP180_data.BMP180_Initial_P, 0); //whole number only.
    Serial.println();
-
 }
 
 // Subprogram to read the BMP085 barometer: Pressure, Temperature and Elevation
 void Read_BMP180( ){
+//   BMP180_data.BMP180_status = 0;
+   Serial.println();
+   Serial.println();
+   Serial.println();
+   Serial.println();
+   Serial.println();
+   Serial.println();
+   Serial.println();
+   Serial.println();
+   Serial.println();
+   Serial.println("*************************************** ");
+   Serial.print("BMP180_data.BMP180_status:    ");
+   Serial.println(BMP180_data.BMP180_status);
+   Serial.println("*************************************** ");
+//   Serial.print("status:    ");
+//   Serial.println(status);
+//   Serial.println("*************************************** ");
 
-   if (BMP180_data.BMP180_status = 0){
-
+   if (BMP180_data.BMP180_status == 0){
       //Barometer sensor status is not available. Initialize the sensor BMP180
+      Serial.print("Initialize the sensor BMP180");
       Start_BMP180_Sensor();
 
    }
-   else {
+   else 
+   {
 
+      Serial.println("Lectura de temperatura ");
       //Se inicia la lectura de temperatura
       BMP180_data.BMP180_status = pressure.startTemperature();
       if (BMP180_data.BMP180_status != 0)
@@ -224,6 +244,10 @@ void Read_BMP180( ){
       }
       else Serial.println("Error iniciando la lectura de temperatura\n");
    }
+   Serial.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+   Serial.print("BMP180_data.BMP180_status:    ");
+   Serial.println(BMP180_data.BMP180_status);
+   Serial.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%");
 }
 
 //void updateThingSpeak(String tsData)
@@ -315,7 +339,7 @@ void loop() {
    Read_BMP180();
 
    // Write received data
-   Serial.println(" ////// ");
+//   Serial.println(" ////// ");
    Serial.print(" BMP180 T: ");
    Serial.print(BMP180_data.BMP180_T, 2); //display 2 decimal places
    Serial.print(" ºC  P: ");
@@ -331,7 +355,8 @@ void loop() {
    // Update ThingSpeak
    if(!client.connected() && (millis() - lastConnectionTime > updateThingSpeakInterval_C))
    {
-      if (uploadTemperature == true)
+//      if (uploadTemperature == true)
+      if (uploadTemperature == false)
       {
          // Upload the Temperatures.
          updateThingSpeak("field1="+String(BMP180_data.BMP180_T,DEC)
@@ -410,3 +435,4 @@ void loop() {
 //   Serial.println();
 //   Serial.println();
 }
+
