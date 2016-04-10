@@ -53,6 +53,7 @@ const int updateThingSpeakInterval_C = 16 * 1000;
 //Se declara una instancia de la librería
 SFE_BMP180 pressure;
 
+
 typedef struct BMP180_type
 {
    char    BMP180_status    = 0; // Whether the sensor give data or not.
@@ -97,6 +98,7 @@ void setup() {
 
    //Initialize the sensor BMP180
 //   Start_BMP180_Sensor();
+  pinMode(BUILTIN_LED, OUTPUT); // Onboard LED  
 
 }
 
@@ -362,6 +364,28 @@ void loop() {
          updateThingSpeak("field1="+String(BMP180_data.BMP180_T,DEC)
                          +"&field2="+String(BMP180_data.BMP180_Pa,DEC)
                          ,writeAPIKey_C);
+  //***********************
+  // Prueba para ver si funciona la subida alimentando con un cargador.
+  //***********************
+  // initialize digital pin BUILD_LED as an output.
+  digitalWrite(BUILTIN_LED, LOW);   // turn off LED with voltage LOW
+  Serial.println("");
+  Serial.println("******************");
+  Serial.println("** BLINK LOW *****");
+  Serial.println("******************");
+  Serial.println("");
+  delay(1000);                      // wait one second
+  digitalWrite(BUILTIN_LED, HIGH);  // turn on LED with voltage HIGH
+  Serial.println("");
+  Serial.println("******************");
+  Serial.println("** BLINK HIGH ****");
+  Serial.println("******************");
+  Serial.println("");
+  delay(1000);                      // wait one second
+//  Serial.println(BUILTIN_LED);
+
+
+
 //         // Reset the variable.
 //         uploadTemperature = false;
 //      }
