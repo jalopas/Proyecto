@@ -396,6 +396,7 @@ void updateGoogleForms(String goData)
       failedCounter++;
       Serial.println("Error 2: Connection to Google Forms Failed (" + String(failedCounter, DEC) + ")");
       Serial.println();
+      // Note the time That the connection was made:
       lastConnectionTime = millis();
    }
    //***************************************************************************
@@ -443,7 +444,7 @@ void loop() {
    // Write received data
    Serial.print(" BMP180 T: ");
    Serial.print(BMP180_data.BMP180_T, 2); //display 2 decimal places
-   Serial.print(" ºC  P: ");
+   Serial.print(" °C  P: ");
    Serial.print(BMP180_data.BMP180_Pa, 0); //whole number only.
    Serial.print(" mBar.  Altitude: ");
    Serial.print(BMP180_data.BMP180_H, 2); //display 2 decimal places
