@@ -6,7 +6,8 @@
 
 https://www.pushingbox.com/
 http://www.instructables.com/id/Post-to-Google-Docs-with-Arduino/
-
+https://docs.google.com/forms/d/1cRJwf9MiV4jKkmAiYpPgx1Uzce4K-DZQ2v0l0ywWUZY/viewform
+https://docs.google.com/forms/d/1cRJwf9MiV4jKkmAiYpPgx1Uzce4K-DZQ2v0l0ywWUZY/formResponse
 */
 
 #include <ESP8266WiFi.h>
@@ -208,10 +209,9 @@ void update_pushingbox()
    if (client.connect(pushingbox_Address, 80))
    {
       Serial.println("connected");
-    //sprintf(pushingbox_msg,"GET /pushingbox?devid=%c&status=%d HTTP/1.1",pushingbox_ID,BMP180_data.BMP180_T);  // NOTE** In this line of code you can see where the temperature value is inserted into the wed address. It follows 'status=' Change that value to whatever you want to post.
-      sprintf(pushingbox_msg,"GET /pushingbox?devid=%s&status=%d HTTP/1.1",pushingbox_ID,BMP180_data.BMP180_T);
-   Serial.print(" BMP180 T: ");
-   Serial.print(BMP180_data.BMP180_T, 2); //display 2 decimal places
+      static char CHAR_BMP180_T[15];
+      dtostrf(BMP180_data.BMP180_T,5, 2, CHAR_BMP180_T); // Pasa el double a char.
+      sprintf(pushingbox_msg,"GET /pushingbox?devid=%s&status=%s HTTP/1.1",pushingbox_ID,CHAR_BMP180_T);
       client.println(pushingbox_msg);
       client.println("Host: api.pushingbox.com");
       client.println("Connection: close");
@@ -259,7 +259,7 @@ void update_pushingbox()
     // Read all the lines of the reply from server and print them to Serial
     while (client.available()) {
        String line = client.readStringUntil('\r');
-       Serial.print(line);
+//       Serial.print(line);
     }
 
     Serial.println("closing connection");
@@ -328,7 +328,7 @@ void updateThingSpeak(String tsData, String writeAPIKey)
    // Read all the lines of the reply from server and print them to Serial
    while (client.available()) {
      String line = client.readStringUntil('\r');
-     Serial.print(line);
+//     Serial.print(line);
    }
 
    Serial.println("closing connection");
