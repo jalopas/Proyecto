@@ -8,6 +8,8 @@ https://www.pushingbox.com/
 http://www.instructables.com/id/Post-to-Google-Docs-with-Arduino/
 https://docs.google.com/forms/d/1cRJwf9MiV4jKkmAiYpPgx1Uzce4K-DZQ2v0l0ywWUZY/viewform
 https://docs.google.com/forms/d/1cRJwf9MiV4jKkmAiYpPgx1Uzce4K-DZQ2v0l0ywWUZY/formResponse
+http://www.electroschematics.com/11291/arduino-dht22-am2302-tutorial-library/
+https://productforums.google.com/forum/#!msg/docs/f4hJKF1OQOw/9k2oJ-kLULsJ
 */
 
 #include <ESP8266WiFi.h>
@@ -28,7 +30,7 @@ WiFiClient client;
 long lastConnectionTime = 0;
 int failedCounter = 0;
 boolean lastConnected     = false;
-boolean uploadTemperature = false;
+boolean uploadTemperature = true;
 
 //const char* host = "data.sparkfun.com";
 //const char* streamId   = "....................";
@@ -46,8 +48,8 @@ char Google_form_key[] = "1cRJwf9MiV4jKkmAiYpPgx1Uzce4K-DZQ2v0l0ywWUZY"; //Repla
 //byte Google_form_Address[] = { 216,58,209,163 }; // Google IP Alemania
 
 char pushingbox_Address[] = "api.pushingbox.com";
-char pushingbox_ID[] = "vE76BCC4BE2C5A8C";  // THIS IS THE DEVICE ID FROM PUSHINGBOX
-//char pushingbox_ID[] = "v6051E44B14C1CDB";
+//char pushingbox_ID[] = "vE76BCC4BE2C5A8C";  // THIS IS THE DEVICE ID FROM PUSHINGBOX
+char pushingbox_ID[] = "vC6A8513890F3CEF";
 char pushingbox_msg[100];
 
 
@@ -208,6 +210,7 @@ void update_pushingbox()
 
    if (client.connect(pushingbox_Address, 80))
    {
+/* Codigo del get
       Serial.println("connected");
       static char CHAR_BMP180_T[15];
       dtostrf(BMP180_data.BMP180_T,5, 2, CHAR_BMP180_T); // Pasa el double a char.
@@ -216,11 +219,100 @@ void update_pushingbox()
       client.println("Host: api.pushingbox.com");
       client.println("Connection: close");
       client.println();
-
       Serial.println(pushingbox_msg);
       Serial.println("Host: api.pushingbox.com");
       Serial.println("Connection: close");
       Serial.println();
+*/
+//*********************************************
+String data="";
+char str1[10];   
+char str2[10];  
+char str3[10];  
+char str4[10];  
+char str5[10]; 
+char str6[10];
+char str7[10];
+char str8[10];
+char str9[10];
+char str10[10]; 
+      Serial.println("........1..");
+
+  data="";
+  data+="";
+  data+="&Temperatura=";
+      static char CHAR_BMP180_T[10];
+      dtostrf(BMP180_data.BMP180_T,5, 2, CHAR_BMP180_T); // Pasa el double a char.
+  data+=CHAR_BMP180_T;     
+  data+="&Presion=";
+      static char CHAR_BMP180_Pa[10];
+      dtostrf(BMP180_data.BMP180_Pa,5, 2, CHAR_BMP180_Pa); // Pasa el double a char.
+  data+=CHAR_BMP180_Pa;
+  data+="&Altitud=";
+      static char CHAR_BMP180_H[10];
+  dtostrf(BMP180_data.BMP180_H,4,2,CHAR_BMP180_H);
+  data+=CHAR_BMP180_H; 
+
+  data+="&status=25";
+/*  dtostrf(InHum,4,2,str4);
+  data+=str4;
+
+ data+="&BMPTemp=";
+  dtostrf(BMPTemp,4,2,str5);
+  data+=str5;    
+  data+="&BarometricPress=";
+  dtostrf(BarometerPress,4,2,str6);
+  data+=str6;
+ data+="&CrawlTemp=";
+  dtostrf(CrawlTemp,4,2,str7);
+  data+=str7; 
+  data+="&CrawlHum=";
+  dtostrf(CrawlHum,4,2,str8);
+  data+=str8;
+
+ data+="&OutTemp=";
+  dtostrf(OutTemp,4,2,str9);
+  data+=str9; 
+  data+="&OutHum=";
+  dtostrf(OutHum,4,2,str10);
+  data+=str10;
+*/
+  data+= "&&submit=Submit";
+  
+    Serial.println ("connecting ...");
+    Serial.print ("data ...");
+    Serial.println (data);
+    
+  // Send the HTTP PUT request:
+    client.print("POST /pushingbox/pushingbox?devid=");
+    client.print(pushingbox_ID);
+    client.println(" HTTP/1.1");
+    client.println("Host: api.pushingbox.com");
+    client.println("Content-Type: application/x-www-form-urlencoded");  
+    client.println("Connection: close");
+    client.print("Content-Length: ");
+    client.println(data.length());
+    client.println();
+    client.print(data);
+    client.println();
+//    delay(100);
+//    client.stop(); 
+/*
+      Serial.println("connected");
+      static char CHAR_BMP180_T[15];
+      dtostrf(BMP180_data.BMP180_T,5, 2, CHAR_BMP180_T); // Pasa el double a char.
+      sprintf(pushingbox_msg,"GET /pushingbox?devid=%s&status=%s HTTP/1.1",pushingbox_ID,CHAR_BMP180_T);
+      client.println(pushingbox_msg);
+      client.println("Host: api.pushingbox.com");
+      client.println("Connection: close");
+      client.println();
+      Serial.println(pushingbox_msg);
+      Serial.println("Host: api.pushingbox.com");
+      Serial.println("Connection: close");
+      Serial.println();
+*/
+
+//*********************************************
  
       delay(1000);
       lastConnectionTime = millis();
@@ -259,7 +351,7 @@ void update_pushingbox()
     // Read all the lines of the reply from server and print them to Serial
     while (client.available()) {
        String line = client.readStringUntil('\r');
-//       Serial.print(line);
+       Serial.print(line);
     }
 
     Serial.println("closing connection");
@@ -319,90 +411,6 @@ void updateThingSpeak(String tsData, String writeAPIKey)
    int timeout = millis() + 5000;
    while (client.available() == 0) {
      if (timeout - millis() < 0) {
- //      Serial.println(">>> Client Timeout !");
-       client.stop();
-       return;
-     }
-   }
-
-   // Read all the lines of the reply from server and print them to Serial
-   while (client.available()) {
-     String line = client.readStringUntil('\r');
-//     Serial.print(line);
-   }
-
-   Serial.println("closing connection");
-   Serial.println();
-   Serial.println();
-
-}
-
-
-//void updateGoogleForms(String)
-void updateGoogleForms(String goData)
-{
-   //Connect to wifi
-   Serial.println("");
-   Serial.println("");
-   Serial.print("IP address: ");
-   Serial.println(WiFi.localIP());
-   Serial.print("Connecting to Google: ");
-   Serial.println(WIFI_ssid);
-
-   if (client.connect(Google_form_Address, 80))
-   {
-      Serial.println("connected");
-
-      client.print("POST /formResponse?formkey=");
-      client.print(Google_form_key);
-      client.println("&ifq HTTP/1.1");
-      client.println("Host: spreadsheets.google.com");
-      client.println("Content-Type: application/x-www-form-urlencoded");
-      client.println("Connection: close");
-      client.print("Content-Length: ");
-      client.println(goData.length());
-      client.println();
-      client.print(goData);
-      client.println();
-/**
-//  Este es el codigo del ejemplo. Es diferente del de thingspeaks.
-  delay(1000);
-  if (!client.connected()) {
-    Serial.println();
-    Serial.println("disconnecting.");
-    client.stop();
-  }
-
-  delay(10000);
-**/
-      lastConnectionTime = millis();
-      delay(1000);
-      if (client.connected())
-      {
-         Serial.println("Connecting to Google Forms ...");
-         Serial.println();
-         failedCounter = 0;
-      }
-      else
-      {
-         failedCounter++;
-         Serial.println("Error 1: Connection to Google Forms failed (" + String(failedCounter, DEC) + ")");
-         Serial.println();
-      }
-      delay(1000);
-   }
-   else
-   {
-      failedCounter++;
-      Serial.println("Error 2: Connection to Google Forms Failed (" + String(failedCounter, DEC) + ")");
-      Serial.println();
-      // Note the time That the connection was made:
-      lastConnectionTime = millis();
-   }
-   //***************************************************************************
-   int timeout = millis() + 5000;
-   while (client.available() == 0) {
-     if (timeout - millis() < 0) {
        Serial.println(">>> Client Timeout !");
        client.stop();
        return;
@@ -412,7 +420,7 @@ void updateGoogleForms(String goData)
    // Read all the lines of the reply from server and print them to Serial
    while (client.available()) {
      String line = client.readStringUntil('\r');
-     Serial.print(line);
+//     Serial.print(line);
    }
 
    Serial.println("closing connection");
@@ -514,3 +522,4 @@ void loop() {
    lastConnected = client.connected();
 }
 
+  
