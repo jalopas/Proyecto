@@ -20,7 +20,7 @@ https://publiclab.org/system/images/photos/000/003/726/original/tmp_DSM501A_Dust
 #include <ESP8266WiFi.h>
 #include <Wire.h>
 
-//// BMP085: Librería para el barometro BMP085
+//// BMP085: Librer?a para el barometro BMP085
 //#include "Barometer.h"
 
 // BMP180: Library to manage the BMP180 barometer
@@ -35,34 +35,14 @@ WiFiClient client;
 long lastConnectionTime = 0;
 int failedCounter = 0;
 boolean lastConnected     = false;
-boolean uploadTemperature = true;
-
-//const char* host = "data.sparkfun.com";
-//const char* streamId   = "....................";
-//const char* privateKey = "....................";
-
-// Variable declaration to work with thingspeak
-// ThingSpeak Settings
-char thingSpeakAddress[] = "api.thingspeak.com";
-String writeAPIKey_C = "7J5F3NW8FDLOJDX8";
-// Google forms Settings
-char Google_form_Address[] = "www.google.es";
-char Google_form_key[] = "1cRJwf9MiV4jKkmAiYpPgx1Uzce4K-DZQ2v0l0ywWUZY"; //Replace with your Key
-//https://docs.google.com/forms/d/1cRJwf9MiV4jKkmAiYpPgx1Uzce4K-DZQ2v0l0ywWUZY/e
-//byte Google_form_Address[] = { 209,85,229,101 }; // Google IP
-//byte Google_form_Address[] = { 216,58,209,163 }; // Google IP Alemania
-
-char pushingbox_Address[] = "api.pushingbox.com";
-//char pushingbox_ID[] = "vE76BCC4BE2C5A8C";  // THIS IS THE DEVICE ID FROM PUSHINGBOX
-char pushingbox_ID[] = "vC6A8513890F3CEF";
-char pushingbox_msg[100];
-
+int uploadCounter = 1;
+int blinkCounter = 1;
 
 // Time interval in milliseconds to update ThingSpeak (number of seconds * 1000 = interval)
 const int updateThingSpeakInterval_C = 16 * 1000;
 
 // BMP180: Variable declaration for the BMP180 barometer.
-//Se declara una instancia de la librería
+//Se declara una instancia de la librer?a
 SFE_BMP180 pressure;
 
 
@@ -71,7 +51,7 @@ typedef struct BMP180_type
    char    STATUS      = 0; // Whether the sensor give data or not.
    double  P_mBa       = 0; // Read pressure in mBar.
    double  HIGH_m      = 0; // Elevation in m.
-   double  TEMPERATURE = 0; // Read Temperature ºC.
+   double  TEMPERATURE = 0; // Read Temperature ?C.
    double  P_INI       = 0; // Reference pressure to calculate elevation differences.
 };
 BMP180_type BMP180_data;
@@ -206,7 +186,7 @@ void Read_BMP180( ){
  
    if (BMP180_data.STATUS == 0){
       //Barometer sensor status is not available. Initialize the sensor BMP180
-      Serial.print("Initialize the sensor BMP180");
+      //Serial.println("Initialize the sensor BMP180");
       Start_BMP180_Sensor();
 
    }
@@ -248,15 +228,105 @@ void Read_BMP180( ){
       else Serial.println("Error iniciando la lectura de temperatura\n");
    }
 }
-//void updatepushingbox(String)
-//void update_pushingbox(String puData)
-void update_pushingbox()
+
+// Send stream to Carriots
+// Send stream to Carriots
+void updateCarriots()
 {
+   // Variable declaration to work with Carriots
+
+  const String Carriots_APIKEY = "5917b4cb109c087d1707f6179cc5593f6656c663f8a897469601632488c46611"; // Carriots apikey
+  const String DEVICE = "ProyectoArduino@pinfocal.pinfocal "; // Replace with the id_developer of your device
+  IPAddress carriotsAddress(82,223,244,60);  // api.carriots.com IP Address
+
+   Serial.println("");
+   Serial.println("");
+   Serial.print(" Carriots: ");
+   Serial.print(WIFI_ssid);
+   Serial.print(" IP address: ");
+   Serial.println(WiFi.localIP());
+
+  if (client.connect(carriotsAddress, 80)) 
+  {  // If there's a successful connection
+     // Build the data field
+     String json = "{\"protocol\":\"v2\",\"device\":\""+DEVICE+"\",\"at\":\"now\",\"data\":{\"Presion\":\""+BMP180_data.TEMPERATURE+
+                                                                                        "\",\"Presion2\":\""+BMP180_data.TEMPERATURE+
+                                                                                        "\",\"Presion3\":\""+BMP180_data.TEMPERATURE+"\"}}";
+    // Make a HTTP request
+    client.println("POST /streams HTTP/1.1");
+    client.println("Host: api.carriots.com");
+    client.println("Accept: application/json");
+    client.println("User-Agent: Arduino-Carriots");
+    client.println("Content-Type: application/json");
+    client.print("carriots.apikey: ");
+    client.println(Carriots_APIKEY);
+    client.print("Content-Length: ");
+    client.println(json.length());
+    client.println(json);
+    client.println("Connection: close");
+    client.println();
+    client.println(json);
+
+      lastConnectionTime = millis();
+      delay(1000);
+      if (client.connected())
+      {
+ /*        Serial.println("Connecting to Carriots...");
+         Serial.println();
+*/
+         failedCounter = 0;
+      }
+      else
+      {
+         failedCounter++;
+         Serial.println("Connection to Carriots failed (" + String(failedCounter, DEC) + ")");
+         Serial.println();
+      }
+      delay(1000);
+
+  }
+  else 
+  {
+      failedCounter++;
+      Serial.println("Connection to Carriots Failed (" + String(failedCounter, DEC) + ")");
+      Serial.println();
+      lastConnectionTime = millis();
+  }
+   //***************************************************************************
+   int timeout = millis() + 5000;
+
+   while (client.available() == 0) 
+   {
+      if (timeout - millis() < 0) 
+      {
+         Serial.println(">>> Client Timeout !");
+         client.stop();
+         return;
+      }
+   }
+
+   // Read all the lines of the reply from server and print them to Serial
+   while (client.available()) 
+   {
+      String line = client.readStringUntil('\r');
+      Serial.print(line);
+   }
+
+   Serial.println("closing connection");
+   Serial.println();
+   Serial.println();
+} // end updateCarriots
+
+void updatePushingbox()
+{
+   char pushingbox_Address[] = "api.pushingbox.com";
+   char pushingbox_ID[] = "vC6A8513890F3CEF"; // THIS IS THE DEVICE ID FROM PUSHINGBOX
+   char pushingbox_msg[100];
+
    //Connect to wifi
    Serial.println("");
    Serial.println("");
    Serial.print(" Pushingbox: ");
-   Serial.print("Connecting to ");
    Serial.print(WIFI_ssid);
    Serial.print(" IP address: ");
    Serial.println(WiFi.localIP());
@@ -393,8 +463,10 @@ char str10[10];
     }
     //***************************************************************************
     int timeout = millis() + 5000;
-    while (client.available() == 0) {
-       if (timeout - millis() < 0) {
+    while (client.available() == 0) 
+    {
+       if (timeout - millis() < 0) 
+       {
           Serial.println(">>> Client Timeout !");
           client.stop();
           return;
@@ -410,27 +482,43 @@ char str10[10];
     Serial.println("closing connection");
     Serial.println();
     Serial.println();
-}
+} //end updatePushingbox;
+
 
 
 //void updateThingSpeak(String tsData)
-void updateThingSpeak(String tsData, String writeAPIKey)
+//void updateThingSpeak(String tsData, String writeAPIKey)
+void updateThingSpeak()
 {
+   // Variable declaration to work with thingspeak
+   // ThingSpeak Settings
+   char thingSpeakAddress[] = "api.thingspeak.com";
+   String writeAPIKey_C = "7J5F3NW8FDLOJDX8";
+   // Google forms Settings
+   char Google_form_Address[] = "www.google.es";
+   char Google_form_key[] = "1cRJwf9MiV4jKkmAiYpPgx1Uzce4K-DZQ2v0l0ywWUZY"; //Replace with your Key
+   //https://docs.google.com/forms/d/1cRJwf9MiV4jKkmAiYpPgx1Uzce4K-DZQ2v0l0ywWUZY/e
+   //byte Google_form_Address[] = { 209,85,229,101 }; // Google IP
+   //byte Google_form_Address[] = { 216,58,209,163 }; // Google IP Alemania
    //Connect to wifi
    Serial.println("");
    Serial.println("");
    Serial.print(" ThingSpeak: ");
-   Serial.print("Connecting to ");
    Serial.print(WIFI_ssid);
    Serial.print(" IP address: ");
    Serial.println(WiFi.localIP());
 
    if (client.connect(thingSpeakAddress, 80))
    {
+      // Build the data field
+      String tsData = "field1="+String(BMP180_data.TEMPERATURE,DEC)
+                    +"&field2="+String(BMP180_data.P_mBa,DEC);
+
+      // Make a HTTP request
       client.print("POST /update HTTP/1.1\n");
       client.print("Host: api.thingspeak.com\n");
       client.print("Connection: close\n");
-      client.print("X-THINGSPEAKAPIKEY: " + writeAPIKey + "\n");
+      client.print("X-THINGSPEAKAPIKEY: " + writeAPIKey_C + "\n");
       client.print("Content-Type: application/x-www-form-urlencoded\n");
       client.print("Content-Length: ");
       client.print(tsData.length());
@@ -462,109 +550,111 @@ void updateThingSpeak(String tsData, String writeAPIKey)
    }
    //***************************************************************************
    int timeout = millis() + 5000;
-   while (client.available() == 0) {
-     if (timeout - millis() < 0) {
-       Serial.println(">>> Client Timeout !");
-       client.stop();
-       return;
-     }
+
+   while (client.available() == 0) 
+   {
+      if (timeout - millis() < 0) 
+      {
+         Serial.println(">>> Client Timeout !");
+         client.stop();
+         return;
+      }
    }
 
    // Read all the lines of the reply from server and print them to Serial
-   while (client.available()) {
-     String line = client.readStringUntil('\r');
-//     Serial.print(line);
+   while (client.available()) 
+   {
+      String line = client.readStringUntil('\r');
+      Serial.print(line);
    }
 
    Serial.println("closing connection");
    Serial.println();
    Serial.println();
-
-}
+}  //updateThingSpeak
 
 
 void loop() {
-
-//   //Read the BMP085 barometer
-//   BMP085_data = Read_BMP085();
-//
-//   // Write received data
-//   Serial.print(" BMP085 T: ");
-//   Serial.print(BMP085_data.BMP085_T, 2); //display 2 decimal places
-//   Serial.print(" ºC  P: ");
-//   Serial.print(BMP085_data.BMP085_Pa, 0); //whole number only.
-//   Serial.print(" Pa = ");
-//   Serial.print(BMP085_data.BMP085_ATM, 4); //display 4 decimal places
-//   Serial.print("Atm.  Altitude: ");
-//   Serial.print(BMP085_data.BMP085_H, 2); //display 2 decimal places
-//   Serial.println(" m");
-//   Serial.println();
 
    //Read the BMP180 barometer
    Read_BMP180();
    // Write received data
    Serial.print(" BMP180 T: ");
    Serial.print(BMP180_data.TEMPERATURE, 2); //display 2 decimal places
-   Serial.print(" °C  P: ");
+   Serial.print(" ?C  P: ");
    Serial.print(BMP180_data.P_mBa, 0); //whole number only.
    Serial.print(" mBar.  Altitude: ");
    Serial.print(BMP180_data.HIGH_m, 2); //display 2 decimal places
-   Serial.println(" m");
+   Serial.print(" m");
 //   Serial.println();
    delay(5000);
    Read_DSM501A();
 //******************************************************************************
-   // Update ThingSpeak
+     Serial.print(" client");
+     if(!client.connected()){Serial.print(" no connected");}else{Serial.print(" conected");}
+     Serial.print(" millis");
+     Serial.print(millis());
+     Serial.print(" lastConnectionTime");
+     Serial.print(lastConnectionTime);
+     Serial.println();
+   // Update data to the IoT server
    if(!client.connected() && (millis() - lastConnectionTime > updateThingSpeakInterval_C))
    {
-      if (uploadTemperature == false)
+      //Set the number of blinks counter.
+      blinkCounter = uploadCounter;
+   
+      Serial.print(" uploadCounter: ");       
+      Serial.println(uploadCounter);
+       
+      switch (uploadCounter) 
       {
-         // Upload the Temperatures.
-         updateThingSpeak("field1="+String(BMP180_data.TEMPERATURE,DEC)
-                         +"&field2="+String(BMP180_data.P_mBa,DEC)
-                         ,writeAPIKey_C);
-  //***********************
-  // Prueba para ver si funciona la subida alimentando con un cargador.
-  //***********************
-  // initialize digital pin BUILD_LED as an output.
-  digitalWrite(BUILTIN_LED, LOW);   // turn on LED with voltage LOW
-//  Serial.println("");
-//  Serial.println("******************");
-//  Serial.println("** BLINK LOW *****");
-//  Serial.println("******************");
-//  Serial.println("");
-  delay(1000);                      // wait one second
-  digitalWrite(BUILTIN_LED, HIGH);  // turn off LED with voltage HIGH
-//  Serial.println("");
-//  Serial.println("******************");
-//  Serial.println("** BLINK HIGH ****");
-//  Serial.println("******************");
-//  Serial.println("");
-  delay(1000);                      // wait one second
-         // Reset the variable.
-         uploadTemperature = true;
-      }
-      else
-      {
-         // Upload the Monitor data.
-        update_pushingbox();   
-        // initialize digital pin BUILD_LED as an output.
-        digitalWrite(BUILTIN_LED, LOW);   // turn on LED with voltage LOW
-        delay(400);                       // wait 300 ms
-        digitalWrite(BUILTIN_LED, HIGH);  // turn off LED with voltage HIGH
-        delay(300);                       // wait 300 ms
-        digitalWrite(BUILTIN_LED, LOW);  // turn on LED with voltage LOW
-        delay(400);                       // wait 300 ms
-        digitalWrite(BUILTIN_LED, HIGH);  // turn off LED with voltage HIGH
-        delay(1000);                      // wait one second
+         case 1:
+            // Upload the Temperatures.
+/*
+            updateThingSpeak("field1="+String(BMP180_data.TEMPERATURE,DEC)
+                            +"&field2="+String(BMP180_data.P_mBa,DEC)
+                            ,writeAPIKey_C);
+*/
+            updateThingSpeak();
+            // Reset the variable.
+            uploadCounter = 2;
+            break;
+
+         case 2:
+            // Upload the Monitor data.
+            updatePushingbox();   
  /*        updateGoogleForms("entry.0.single="+String(BMP180_data.TEMPERATURE,DEC)
                         +"&entry.2.single="+String(BMP180_data.P_mBa,DEC)
                         +"&submit=Submit");
  */
-         // Change variable value.
-         uploadTemperature = false;
- 
-      }
+            // Change variable value.
+            uploadCounter = 3;
+            break;
+
+         case 3:
+            // Upload the Monitor data.
+            updateCarriots();
+            // Change variable value.
+            uploadCounter = 1;
+            break;
+     
+         default: 
+            // if nothing else matches, do the default
+            // default is optional
+            uploadCounter = 1;
+            break;
+      } 
+
+      for (int i=0; i <= blinkCounter; i++){
+
+         // initialize digital pin BUILD_LED as an output.
+         //  Serial.println("** BLINK LOW *****");
+         digitalWrite(BUILTIN_LED, LOW);   // turn on LED with voltage LOW
+         delay(1000);                      // wait one second
+         //  Serial.println("** BLINK HIGH ****");
+         digitalWrite(BUILTIN_LED, HIGH);  // turn off LED with voltage HIGH
+         delay(1000);                      // wait one second
+      } 
    }
    // Check if Arduino Wifi needs to be restarted
    if (failedCounter > 3 )
