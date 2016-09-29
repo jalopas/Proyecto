@@ -112,6 +112,7 @@ void setup() {
 
 }
 
+// Rutina para leer el sensor de polvo.
 void Read_DSM501A() {
   //http://www.elecrow.com/wiki/index.php?title=Dust_Sensor-_DSM501A
   DSM501A_data.END_TIME = millis();
@@ -236,7 +237,7 @@ void updateCarriots()
    // Variable declaration to work with Carriots
 
   const String Carriots_APIKEY = "5917b4cb109c087d1707f6179cc5593f6656c663f8a897469601632488c46611"; // Carriots apikey
-  const String DEVICE = "ProyectoArduino@pinfocal.pinfocal "; // Replace with the id_developer of your device
+  const String DEVICE = "ProyectoArduino@pinfocal.pinfocal"; // Replace with the id_developer of your device
   IPAddress carriotsAddress(82,223,244,60);  // api.carriots.com IP Address
 
    Serial.println("");
@@ -279,7 +280,7 @@ void updateCarriots()
       else
       {
          failedCounter++;
-         Serial.println("Connection to Carriots failed (" + String(failedCounter, DEC) + ")");
+         Serial.println("Error_1: Connection to Carriots failed (" + String(failedCounter, DEC) + ")");
          Serial.println();
       }
       delay(1000);
@@ -288,7 +289,7 @@ void updateCarriots()
   else 
   {
       failedCounter++;
-      Serial.println("Connection to Carriots Failed (" + String(failedCounter, DEC) + ")");
+      Serial.println("Error_2: Connection to Carriots Failed (" + String(failedCounter, DEC) + ")");
       Serial.println();
       lastConnectionTime = millis();
   }
@@ -449,7 +450,7 @@ char str10[10];
       else
       {
          failedCounter++;
-         Serial.println("Error 1: Connection to Pushingbox failed (" + String(failedCounter, DEC) + ")");
+         Serial.println("Error_3: Connection to Pushingbox failed (" + String(failedCounter, DEC) + ")");
          Serial.println();
       }
       delay(1000);
@@ -457,7 +458,7 @@ char str10[10];
     else
     {
        failedCounter++;
-       Serial.println("Error 2: Connection to Pushingbox Failed (" + String(failedCounter, DEC) + ")");
+       Serial.println("Error_4: Connection to Pushingbox Failed (" + String(failedCounter, DEC) + ")");
        Serial.println();
        lastConnectionTime = millis();
     }
@@ -536,7 +537,7 @@ void updateThingSpeak()
       else
       {
          failedCounter++;
-         Serial.println("Connection to ThingSpeak failed (" + String(failedCounter, DEC) + ")");
+         Serial.println("Error_5: Connection to ThingSpeak failed (" + String(failedCounter, DEC) + ")");
          Serial.println();
       }
       delay(1000);
@@ -544,7 +545,7 @@ void updateThingSpeak()
    else
    {
       failedCounter++;
-      Serial.println("Connection to ThingSpeak Failed (" + String(failedCounter, DEC) + ")");
+      Serial.println("Error_6: Connection to ThingSpeak Failed (" + String(failedCounter, DEC) + ")");
       Serial.println();
       lastConnectionTime = millis();
    }
@@ -576,27 +577,36 @@ void updateThingSpeak()
 
 void loop() {
 
-   //Read the BMP180 barometer
-   Read_BMP180();
-   // Write received data
-   Serial.print(" BMP180 T: ");
-   Serial.print(BMP180_data.TEMPERATURE, 2); //display 2 decimal places
-   Serial.print(" ?C  P: ");
-   Serial.print(BMP180_data.P_mBa, 0); //whole number only.
-   Serial.print(" mBar.  Altitude: ");
-   Serial.print(BMP180_data.HIGH_m, 2); //display 2 decimal places
-   Serial.print(" m");
+  // Sensors are only read when the arduino is not uploading data to the network.
+  if (!client.connected())
+  {
+
+      //Read the BMP180 barometer
+      Read_BMP180();
+      // Write received data
+      Serial.print(" BMP180 T: ");
+      Serial.print(BMP180_data.TEMPERATURE, 2); //display 2 decimal places
+      Serial.print(" ?C  P: ");
+      Serial.print(BMP180_data.P_mBa, 0); //whole number only.
+      Serial.print(" mBar.  Altitude: ");
+      Serial.print(BMP180_data.HIGH_m, 2); //display 2 decimal places
+      Serial.print(" m");
 //   Serial.println();
-   delay(5000);
-   Read_DSM501A();
+      delay(5000);
+      Read_DSM501A();
 //******************************************************************************
-     Serial.print(" client");
-     if(!client.connected()){Serial.print(" no connected");}else{Serial.print(" conected");}
+     Serial.print(" client no connected");
+//     if(!client.connected()){Serial.print(" no connected");}else{Serial.print(" conected");}
      Serial.print(" millis");
      Serial.print(millis());
      Serial.print(" lastConnectionTime");
      Serial.print(lastConnectionTime);
      Serial.println();
+  }
+  else
+  {
+     Serial.println(" client connected");	  
+  }
    // Update data to the IoT server
    if(!client.connected() && (millis() - lastConnectionTime > updateThingSpeakInterval_C))
    {
