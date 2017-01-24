@@ -378,29 +378,6 @@ char str10[10];
   data+=CHAR_HIGH; 
 
   data+="&status=25";
-/*  dtostrf(InHum,4,2,str4);
-  data+=str4;
-
- data+="&BMPTemp=";
-  dtostrf(BMPTemp,4,2,str5);
-  data+=str5;    
-  data+="&BarometricPress=";
-  dtostrf(BarometerPress,4,2,str6);
-  data+=str6;
- data+="&CrawlTemp=";
-  dtostrf(CrawlTemp,4,2,str7);
-  data+=str7; 
-  data+="&CrawlHum=";
-  dtostrf(CrawlHum,4,2,str8);
-  data+=str8;
-
- data+="&OutTemp=";
-  dtostrf(OutTemp,4,2,str9);
-  data+=str9; 
-  data+="&OutHum=";
-  dtostrf(OutHum,4,2,str10);
-  data+=str10;
-*/
   data+= "&&submit=Submit";
   
     Serial.println ("connecting ...");
@@ -419,22 +396,6 @@ char str10[10];
     client.println();
     client.print(data);
     client.println();
-//    delay(100);
-//    client.stop(); 
-/*
-      Serial.println("connected");
-      static char CHAR_BMP180_T[15];
-      dtostrf(BMP180_data.TEMPERATURE,5, 2, CHAR_BMP180_T); // Pasa el double a char.
-      sprintf(pushingbox_msg,"GET /pushingbox?devid=%s&status=%s HTTP/1.1",pushingbox_ID,CHAR_BMP180_T);
-      client.println(pushingbox_msg);
-      client.println("Host: api.pushingbox.com");
-      client.println("Connection: close");
-      client.println();
-      Serial.println(pushingbox_msg);
-      Serial.println("Host: api.pushingbox.com");
-      Serial.println("Connection: close");
-      Serial.println();
-*/
 
 //*********************************************
  
