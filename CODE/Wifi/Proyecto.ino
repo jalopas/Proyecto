@@ -130,7 +130,7 @@ void setup() {
    // Repeat until the conexion is established
    while (WiFi.status() != WL_CONNECTED) {
       delay(500);
-      Serial.print(".");	
+      Serial.print(".");  
    }
 
    //The Wifi connection has been opened.
@@ -290,7 +290,7 @@ void Read_Barometer( ){
    Serial.print(BMP180_data.HIGH_m, 2); //display 2 decimal places
    Serial.print(" m");
    Serial.println();
-	
+  
 }
 
 // Subprogram to read the MiCS-6814 Mutichannel Gas Sensor: 
@@ -356,8 +356,17 @@ void updateCarriots()
    if (client.connect(carriotsAddress, httpPort))
    {  // If there's a successful connection
       // Build the data field
-      String json_url = "{\"protocol\":\"v2\",\"device\":\""+DEVICE+"\",\"at\":\"now\",\"data\":{\"Temperatura\":\""+BMP180_data.TEMPERATURE+"\",\"Presion\":\""+BMP180_data.P_mBa+
-                      "\",\"Presion3\":\""+BMP180_data.TEMPERATURE+"\"}}";
+      String json_url = 
+         "{\"protocol\":\"v2\",\"device\":\""+DEVICE+
+          "\",\"at\":\"now\",\"data\":{\"Temperatura\":\""+BMP180_data.TEMPERATURE+
+          "\",\"Presion\":\""+BMP180_data.P_mBa+
+          "\",\"Concentracion\":\""+DSM501A_data.CONCENTRATION+
+          "\",\"Ratio\":\""+DSM501A_data.RATIO+
+          "\",\"Masa\":\""+DSM501A_data.particleMass+
+          "\",\"Monoxido\":\""+MiCS_6814_data.CO+
+          "\",\"Nitrato\":\""+MiCS_6814_data.NO2+
+          "\",\"Metano\":\""+MiCS_6814_data.CH4+"\"}}";              
+              
       // Make a HTTP request
       client.println("POST /streams HTTP/1.1");
       client.println("Host: api.carriots.com");
@@ -416,8 +425,8 @@ void updateCarriots()
    while (client.available())
    {
       String line = client.readStringUntil('\r');
-      Serial.print(".");
-      //Serial.print(line);
+      //Serial.print(".");
+      Serial.print(line);
    }
 
    Serial.println(" OK.");
@@ -623,36 +632,28 @@ void updateemoncms()
       // Build the data field, create a json_url for the first request
       //json_url string to be requested
       String json_url_1 = " /input/post.json?node=" + String(node) + 
-	                      "&json={concentration:" + String(DSM501A_data.CONCENTRATION) +  
-						  ",ratio:" + String(DSM501A_data.RATIO) +  
-						  "}&apikey=" + emoncms_ID; 
-	  String host = "Host: emoncms.org\n";
+                        "&json={concentration:" + String(DSM501A_data.CONCENTRATION) +  
+              ",ratio:" + String(DSM501A_data.RATIO) +  
+              "}&apikey=" + emoncms_ID; 
+    String host = "Host: emoncms.org\n";
   
       // This will send the request to the server
       String requestString = String("GET ") + json_url_1  + " HTTP/1.1\n"+ host + "Connection: close\r\n\r\n";
       Serial.print("Request String: " + requestString);
       client.print(requestString ); //Send request to server
-//Write out what the server responds with
-//while(client.available()){
-//   Serial.write(client.read());
-//}
+
       delay(1000);
       delay(1000);
       // We now create a URL for the second request
       String json_url_2 = " /input/post.json?node=" +  String(node) + 
                           "&json={mass:" + String(DSM501A_data.particleMass) + 
-		                  "}&apikey=" + emoncms_ID; 
+                      "}&apikey=" + emoncms_ID; 
     
    
       // This will send the request to the server
       requestString = String("GET ") + json_url_2  + " HTTP/1.1\n"+ host + "Connection: close\r\n\r\n";
       Serial.print("Request String: " + requestString);
       client.print(requestString );
-//Write out what the server responds with
-//while(client.available()){
-//   Serial.write(client.read());
-//}
-
 
       delay(1000);
       lastConnectionTime = millis();
@@ -716,7 +717,7 @@ void loop() {
       Read_Dust_Sensor();
       delay(5000);
 
-	  // Read the MiCS-6814 Mutichannel Gas Sensor: 
+    // Read the MiCS-6814 Mutichannel Gas Sensor: 
       //  NH3, CO, NO2, C3H8, C4H10, CH4, H2 and C2H5OH
       Read_Multichanel_Gas_Sensor();
       delay(5000);
@@ -738,30 +739,26 @@ void loop() {
       {
          case 1:
             // Upload the Temperatures.
-            updateemoncms();
-//            updateThingSpeak();
+            updateThingSpeak();
             // Reset the variable.
             uploadCounter = 2;
             break;
 
          case 2:
             // Upload the Monitor data.
-            updateemoncms();
-//            updateCarriots();
+            updateCarriots();
             // Change variable value.
             uploadCounter = 3;
             break;
 
          case 3:
             // Upload the Monitor data.
-//            updatePushingbox();
-            updateemoncms();
+            updatePushingbox();
             // Change variable value.
             uploadCounter = 4;
             break;
          case 4:
             // Upload the Monitor data.
-//            updateCarriots();
             updateemoncms();
             // Change variable value.
             uploadCounter = 1;
