@@ -28,6 +28,9 @@ https://publiclab.org/system/images/photos/000/003/726/original/tmp_DSM501A_Dust
 // BMP180: Library to manage the BMP180 barometer
 #include <SFE_BMP180.h>
 
+// Library to convert float to string
+//#include "floatToString.h" 
+
 // Variable declaration to manage the WIFI networt
 const char* WIFI_ssid = "Hotspot";
 const char* password  = "%yatengowifi%";
@@ -53,7 +56,7 @@ typedef struct BMP180_type
    char    STATUS      = 0; // Whether the sensor give data or not.
    double  P_mBa       = 0; // Read pressure in mBar.
    double  HIGH_m      = 0; // Elevation in m.
-   double  TEMPERATURE = 0; // Read Temperature ?C.
+   double  TEMPERATURE = 0; // Read Temperature ºC.
    double  P_INI       = 0; // Reference pressure to calculate elevation differences.
 };
 BMP180_type BMP180_data;
@@ -103,7 +106,7 @@ void updateThingSpeak();
 void updateemoncms();
 
 void setup() {
-   Serial.begin(9600);
+   Serial.begin(115200);
    delay(10);
 
    // Initialize the sensor BMP180 => No funciona con este micro.
@@ -212,7 +215,7 @@ void Read_Dust_Sensor() {
          520*DSM501A_data.RATIO+0.62; // using spec sheet curve
       //concentration = 1.1*pow(ratio,3)-3.8*pow(ratio,2)+520*ratio+0.62; // Calculates concentration using spec sheet curve
       DSM501A_data.CONCENTRATION = DSM501A_data.CONCENTRATION * (3531.46); //Converts to Cubic meter
-      Serial.print(" DSM501A Concentration = ");
+      Serial.print(" DSM501A  : Concentration = ");
       Serial.print(DSM501A_data.CONCENTRATION);
       Serial.print(" pcs/m3");
 
@@ -279,7 +282,7 @@ void Read_Barometer( ){
       else Serial.println("Error iniciando la lectura de temperatura\n");
    }
    // Write data
-   Serial.print(" BMP180  T: ");
+   Serial.print(" BMP180   : T: ");
    Serial.print(BMP180_data.TEMPERATURE, 2); //display 2 decimal places
    Serial.print(" ");
    Serial.print((char)176);
@@ -300,7 +303,7 @@ void Read_Multichanel_Gas_Sensor()
     Serial.print(" Gas (ppm): ");
 
     MiCS_6814_data.NH3 = gas.measure_NH3();
-    Serial.print(" NH3: ");
+    Serial.print("NH3: ");
     if(MiCS_6814_data.NH3>=0) Serial.print(MiCS_6814_data.NH3);
     else Serial.print("invalid");
 
@@ -425,8 +428,8 @@ void updateCarriots()
    while (client.available())
    {
       String line = client.readStringUntil('\r');
-      //Serial.print(".");
-      Serial.print(line);
+      Serial.print(".");
+      //Serial.print(line);
    }
 
    Serial.println(" OK.");
@@ -459,18 +462,46 @@ void updatePushingbox()
 
       data="";
       data+="";
-      data+="&Temperatura=";
-      static char CHAR_BMP180_T[10];
-      dtostrf(BMP180_data.TEMPERATURE,5, 2, CHAR_BMP180_T); // Pasa el double a char.
-      data+=CHAR_BMP180_T;
-      data+="&Presion=";
+      
+    data+="&Temperatura=";
+      static char CHAR_TEMPERATURE[10];
+      dtostrf(BMP180_data.TEMPERATURE,5, 2, CHAR_TEMPERATURE); // Pasa el double a char.
+      data+=CHAR_TEMPERATURE;
+      
+    data+="&Presion=";
       static char CHAR_P_mBa[10];
       dtostrf(BMP180_data.P_mBa,5, 2, CHAR_P_mBa); // Pasa el double a char.
       data+=CHAR_P_mBa;
-      data+="&Altitud=";
-      static char CHAR_HIGH[10];
-      dtostrf(BMP180_data.HIGH_m,4,2,CHAR_HIGH);
-      data+=CHAR_HIGH;
+      
+    data+="&Concentracion=";
+      static char CHAR_CONCENTRATION[10];
+      dtostrf(DSM501A_data.CONCENTRATION,9, 2, CHAR_CONCENTRATION); // Pasa el double a char.
+      data+=CHAR_CONCENTRATION;
+
+      data+="&Ratio=";
+      static char CHAR_RATIO[10];
+      dtostrf(DSM501A_data.RATIO,5, 2, CHAR_RATIO); // Pasa el double a char.
+      data+=CHAR_RATIO;
+
+      data+="&particleMass=";
+      static char CHAR_particleMass[10];
+      dtostrf(DSM501A_data.particleMass,4, 2, CHAR_particleMass); // Pasa el double a char.
+      data+=CHAR_particleMass;
+
+      data+="&CO=";
+      static char CHAR_CO[10];
+      dtostrf(MiCS_6814_data.CO,5, 2, CHAR_CO); // Pasa el double a char.
+      data+=CHAR_CO;
+
+      data+="&NO2=";
+      static char CHAR_NO2[10];
+      dtostrf(MiCS_6814_data.NO2,4, 2, CHAR_NO2); // Pasa el double a char.
+      data+=CHAR_NO2;
+
+      data+="&CH4=";
+      static char CHAR_CH4[10];
+      dtostrf(MiCS_6814_data.CH4,11, 2, CHAR_CH4); // Pasa el double a char.
+      data+=CHAR_CH4;
 
       data+="&status=25";
       data+= "&&submit=Submit";
@@ -554,6 +585,12 @@ void updateThingSpeak()
       // Build the data field
       String tsData = "field1="+String(BMP180_data.TEMPERATURE,DEC)
                     +"&field2="+String(BMP180_data.P_mBa,DEC);
+                    +"field3="+String(DSM501A_data.CONCENTRATION,DEC)
+                    +"field4="+String(DSM501A_data.RATIO,DEC)
+                    +"field5="+String(DSM501A_data.particleMass,DEC)
+                    +"field6="+String(MiCS_6814_data.CO,DEC)
+                    +"field7="+String(MiCS_6814_data.NO2,DEC)
+                    +"field8="+String(MiCS_6814_data.CH4,DEC);
 
       // Make a HTTP request
       client.print("POST /update HTTP/1.1\n");
@@ -622,36 +659,58 @@ void updateemoncms()
    char emoncms_ID[] = "cca68e0f95bf2fbb3cd12ba92ae64b38";
    //Connect to wifi
    //Unique node, kind of unique sensor number
-   int node = 3;
+   int node;
 
    Serial.print(" emoncms: ");
    if (client.connect("emoncms.org", httpPort)) 
    {
       Serial.println("Connected to server");
       // If there's a successful connection
-      // Build the data field, create a json_url for the first request
-      //json_url string to be requested
+      // Build the data field, create a json_url for the Barometer
+      node = 1;
       String json_url_1 = " /input/post.json?node=" + String(node) + 
-                        "&json={concentration:" + String(DSM501A_data.CONCENTRATION) +  
-              ",ratio:" + String(DSM501A_data.RATIO) +  
+              "&json={Temperatura:" + String(BMP180_data.TEMPERATURE) +  
+                        ",Presion:" + String(BMP180_data.P_mBa) +  
               "}&apikey=" + emoncms_ID; 
-    String host = "Host: emoncms.org\n";
+      // Build the data field, create a json_url for the Dust Sensor
+      node = 2;
+      String json_url_2 = " /input/post.json?node=" + String(node) + 
+              "&json={Concentration:" + String(DSM501A_data.CONCENTRATION) +  
+              "}&apikey=" + emoncms_ID; 
+      String json_url_3 = " /input/post.json?node=" + String(node) + 
+              "&json={Ratio:" + String(DSM501A_data.RATIO) +  
+                             ",Masa:" + String(DSM501A_data.particleMass) +  
+              "}&apikey=" + emoncms_ID; 
+      node = 3;
+      // Build the data field, the json_url for the Multichanel Gas Sensor
+      String json_url_4 = " /input/post.json?node=" + String(node) + 
+              "&json={CO:" + String(MiCS_6814_data.CO) +  
+                   ",NO2:" + String(MiCS_6814_data.NO2) +  
+                   ",CH4:" + String(MiCS_6814_data.CH4) +  
+              "}&apikey=" + emoncms_ID; 
+ 
+      String host = "Host: emoncms.org\n";
   
       // This will send the request to the server
       String requestString = String("GET ") + json_url_1  + " HTTP/1.1\n"+ host + "Connection: close\r\n\r\n";
       Serial.print("Request String: " + requestString);
       client.print(requestString ); //Send request to server
 
-      delay(1000);
-      delay(1000);
-      // We now create a URL for the second request
-      String json_url_2 = " /input/post.json?node=" +  String(node) + 
-                          "&json={mass:" + String(DSM501A_data.particleMass) + 
-                      "}&apikey=" + emoncms_ID; 
-    
-   
+      delay(5000);
       // This will send the request to the server
       requestString = String("GET ") + json_url_2  + " HTTP/1.1\n"+ host + "Connection: close\r\n\r\n";
+      Serial.print("Request String: " + requestString);
+      client.print(requestString );
+
+      delay(5000);
+      // This will send the request to the server
+      requestString = String("GET ") + json_url_3  + " HTTP/1.1\n"+ host + "Connection: close\r\n\r\n";
+      Serial.print("Request String: " + requestString);
+      client.print(requestString );
+
+      delay(5000);
+      // This will send the request to the server
+      requestString = String("GET ") + json_url_4  + " HTTP/1.1\n"+ host + "Connection: close\r\n\r\n";
       Serial.print("Request String: " + requestString);
       client.print(requestString );
 
@@ -790,3 +849,5 @@ void loop() {
 
    lastConnected = client.connected();
 } //end loop
+
+
