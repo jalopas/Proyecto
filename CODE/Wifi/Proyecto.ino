@@ -695,20 +695,68 @@ void updateemoncms()
       String requestString = String("GET ") + json_url_1  + " HTTP/1.1\n"+ host + "Connection: close\r\n\r\n";
       Serial.print("Request String: " + requestString);
       client.print(requestString ); //Send request to server
+  Serial.println("********* Response 1 *********");
+  //Wait for server to respond and print '-'
+  while(!client.available()) {
+    Serial.print("-");
+    delay(200); 
+  }
 
-      delay(5000);
+  //Write out what the server responds with
+  while(client.available()){
+    Serial.write(client.read());
+  }
+
+  if (!client.connect("emoncms.org", httpPort)) {
+    Serial.println("connection failed");
+    return;
+  }
+
+      delay(1000);
       // This will send the request to the server
       requestString = String("GET ") + json_url_2  + " HTTP/1.1\n"+ host + "Connection: close\r\n\r\n";
       Serial.print("Request String: " + requestString);
       client.print(requestString );
 
-      delay(5000);
+  Serial.println("********* Response 2 *********");
+  //Wait for server to respond and print '-'
+  while(!client.available()) {
+    Serial.print("-");
+    delay(200); 
+  }
+
+  //Write out what the server responds with
+  while(client.available()){
+    Serial.write(client.read());
+  }
+
+  if (!client.connect("emoncms.org", httpPort)) {
+    Serial.println("connection failed");
+    return;
+  }
+      delay(1000);
       // This will send the request to the server
       requestString = String("GET ") + json_url_3  + " HTTP/1.1\n"+ host + "Connection: close\r\n\r\n";
       Serial.print("Request String: " + requestString);
       client.print(requestString );
+  Serial.println("********* Response 3 *********");
+  //Wait for server to respond and print '-'
+  while(!client.available()) {
+    Serial.print("-");
+    delay(200); 
+  }
 
-      delay(5000);
+  //Write out what the server responds with
+  while(client.available()){
+    Serial.write(client.read());
+  }
+
+  if (!client.connect("emoncms.org", httpPort)) {
+    Serial.println("connection failed");
+    return;
+  }
+
+      delay(1000);
       // This will send the request to the server
       requestString = String("GET ") + json_url_4  + " HTTP/1.1\n"+ host + "Connection: close\r\n\r\n";
       Serial.print("Request String: " + requestString);
