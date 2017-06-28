@@ -142,11 +142,15 @@ void setup() {
    Serial.println(WiFi.localIP());
    
    //Initialize the sensor BMP180
-   Serial.print("* Barometer : ");
+   Serial.println("*");
+   Serial.print("*   Barometer   : ");
    Start_BMP180_Sensor();
 
+   //Initialize the sensor BMP180
+   Serial.print("*   Dust Sensor : ");
+
    // Initialise Multichanel Gas Sensor
-   Serial.print("* Gas Sensor: ");
+   Serial.print("*   Gas Sensor  : ");
    gas.begin(0x04);//the default I2C address of the slave is 0x04
    gas.powerOn();
 
@@ -215,6 +219,7 @@ void Read_Dust_Sensor() {
          520*DSM501A_data.RATIO+0.62; // using spec sheet curve
       //concentration = 1.1*pow(ratio,3)-3.8*pow(ratio,2)+520*ratio+0.62; // Calculates concentration using spec sheet curve
       DSM501A_data.CONCENTRATION = DSM501A_data.CONCENTRATION * (3531.46); //Converts to Cubic meter
+      Serial.print(millis());
       Serial.print(" DSM501A  : Concentration = ");
       Serial.print(DSM501A_data.CONCENTRATION);
       Serial.print(" pcs/m3");
@@ -282,6 +287,7 @@ void Read_Barometer( ){
       else Serial.println("Error iniciando la lectura de temperatura\n");
    }
    // Write data
+   Serial.print(millis());
    Serial.print(" BMP180   : T: ");
    Serial.print(BMP180_data.TEMPERATURE, 2); //display 2 decimal places
    Serial.print(" ");
@@ -300,6 +306,7 @@ void Read_Barometer( ){
 //  NH3, CO, NO2, C3H8, C4H10, CH4, H2 and C2H5OH
 void Read_Multichanel_Gas_Sensor()
 {
+    Serial.print(millis());
     Serial.print(" Gas (ppm): ");
 
     MiCS_6814_data.NH3 = gas.measure_NH3();
@@ -355,6 +362,7 @@ void updateCarriots()
    const String DEVICE = "ProyectoArduino@pinfocal.pinfocal"; // Replace with the id_developer of your device
    IPAddress carriotsAddress(82,223,244,60);  // api.carriots.com IP Address
 
+   Serial.print(millis());
    Serial.print(" Carriots: ");
    if (client.connect(carriotsAddress, httpPort))
    {  // If there's a successful connection
@@ -437,9 +445,12 @@ void updateCarriots()
 
 void updatePushingbox()
 {
+   Serial.print(millis());
    char pushingbox_Address[] = "api.pushingbox.com";
    // THIS IS THE DEVICE ID FROM PUSHINGBOX
    char pushingbox_ID[] = "vC6A8513890F3CEF";
+   //char pushingbox_ID[] = "vEBD38E81685020D";
+   
    char pushingbox_msg[100];
 
    //Connect to wifi
@@ -463,17 +474,17 @@ void updatePushingbox()
       data="";
       data+="";
       
-    data+="&Temperatura=";
+      data+="&Temperatura=";
       static char CHAR_TEMPERATURE[10];
       dtostrf(BMP180_data.TEMPERATURE,5, 2, CHAR_TEMPERATURE); // Pasa el double a char.
       data+=CHAR_TEMPERATURE;
       
-    data+="&Presion=";
+      data+="&Presion=";
       static char CHAR_P_mBa[10];
       dtostrf(BMP180_data.P_mBa,5, 2, CHAR_P_mBa); // Pasa el double a char.
       data+=CHAR_P_mBa;
       
-    data+="&Concentracion=";
+      data+="&Concentracion=";
       static char CHAR_CONCENTRATION[10];
       dtostrf(DSM501A_data.CONCENTRATION,9, 2, CHAR_CONCENTRATION); // Pasa el double a char.
       data+=CHAR_CONCENTRATION;
@@ -483,7 +494,7 @@ void updatePushingbox()
       dtostrf(DSM501A_data.RATIO,5, 2, CHAR_RATIO); // Pasa el double a char.
       data+=CHAR_RATIO;
 
-      data+="&particleMass=";
+      data+="&Masa=";
       static char CHAR_particleMass[10];
       dtostrf(DSM501A_data.particleMass,4, 2, CHAR_particleMass); // Pasa el double a char.
       data+=CHAR_particleMass;
@@ -502,6 +513,12 @@ void updatePushingbox()
       static char CHAR_CH4[10];
       dtostrf(MiCS_6814_data.CH4,11, 2, CHAR_CH4); // Pasa el double a char.
       data+=CHAR_CH4;
+ /*     data+="&Todo=";
+      data+=" ";
+      data+="&entry.2131645315=";
+      data+=CHAR_TEMPERATURE;
+ */
+     data=data+"&Todo="+" "+"&entry.2131645315="+CHAR_TEMPERATURE+"&entry.468221150="+CHAR_P_mBa;
 
       data+="&status=25";
       data+= "&&submit=Submit";
@@ -573,11 +590,14 @@ void updateThingSpeak()
    // Variable declaration to work with thingspeak
    // ThingSpeak Settings
    char thingSpeakAddress[] = "api.thingspeak.com";
-   String writeAPIKey_C = "7J5F3NW8FDLOJDX8";
+   //String writeAPIKey_C = "7J5F3NW8FDLOJDX8";
+   String writeAPIKey_C = "vEBD38E81685020D";
+      
 /*    // Google forms Settings
    char Google_form_Address[] = "www.google.es";
    char Google_form_key[] = "1cRJwf9MiV4jKkmAiYpPgx1Uzce4K-DZQ2v0l0ywWUZY"; //Replace with your Key
  */   //https://docs.google.com/forms/d/1cRJwf9MiV4jKkmAiYpPgx1Uzce4K-DZQ2v0l0ywWUZY/e
+   Serial.print(millis());
    Serial.print(" ThingSpeak: ");
 
    if (client.connect(thingSpeakAddress, httpPort))
@@ -661,6 +681,7 @@ void updateemoncms()
    //Unique node, kind of unique sensor number
    int node;
 
+   Serial.print(millis());
    Serial.print(" emoncms: ");
    if (client.connect("emoncms.org", httpPort)) 
    {
@@ -846,14 +867,14 @@ void loop() {
       {
          case 1:
             // Upload the Temperatures.
-            updateThingSpeak();
+            updatePushingbox();
             // Reset the variable.
             uploadCounter = 2;
             break;
 
          case 2:
             // Upload the Monitor data.
-            updateCarriots();
+            updatePushingbox();
             // Change variable value.
             uploadCounter = 3;
             break;
@@ -866,7 +887,7 @@ void loop() {
             break;
          case 4:
             // Upload the Monitor data.
-            updateemoncms();
+            updatePushingbox();
             // Change variable value.
             uploadCounter = 1;
             break;
@@ -897,5 +918,3 @@ void loop() {
 
    lastConnected = client.connected();
 } //end loop
-
-
