@@ -372,8 +372,8 @@ void updateCarriots()
    Serial.print(millis());
    Serial.print(" Carriots: ");
    if (client.connect(carriotsAddress, httpPort))
-   {  // If there's a successful connection
-      // Build the data field
+   {  // Si la conexi?n se ha establecido.
+      // Genera el campo de datos.
       String json_url = 
          "{\"protocol\":\"v2\",\"device\":\""+DEVICE+
           "\",\"at\":\"now\",\"data\":{\"Temperatura\":\""+BMP180_data.TEMPERATURE+
@@ -382,10 +382,10 @@ void updateCarriots()
           "\",\"Ratio\":\""+DSM501A_data.RATIO+
           "\",\"Masa\":\""+DSM501A_data.particleMass+
           "\",\"Monoxido\":\""+MiCS_6814_data.CO+
-          "\",\"Nitrato\":\""+MiCS_6814_data.NO2+
+          "\",\"Dioxido\":\""+MiCS_6814_data.NO2+
           "\",\"Metano\":\""+MiCS_6814_data.CH4+"\"}}";              
               
-      // Make a HTTP request
+      // Genera una petici?n HTTP
       client.println("POST /streams HTTP/1.1");
       client.println("Host: api.carriots.com");
       client.println("Accept: application/json");
@@ -694,44 +694,28 @@ void updateThingSpeak()
 
 void updateThingSpeak_1()
 {
-   // Variable declaration to work with thingspeak
-   // ThingSpeak Settings
+   // Declaraci?n de variables para trabajar con thingspeak
+   // Configuraci?n para ThingSpeak
    char thingSpeakAddress[] = "api.thingspeak.com";
-  unsigned long thingspeak_channel_number_C = 101717;
- // const char * writeAPIKey_C = "LD79EOAAWRVYF04Y";
-  const char * writeAPIKey_C = "7J5F3NW8FDLOJDX8";
-  float TEMPERATURE_LOG = (float) BMP180_data.TEMPERATURE;
-  float PRESURE_LOG     = (float) BMP180_data.P_mBa;
-  float MASS_LOG        = (float) DSM501A_data.particleMass;
-/*  static char CHAR_PRESURE[7];
-  dtostrf(BMP180_data.P_mBa,4, 2, CHAR_PRESURE); // Pasa el double a char.
-  static char CHAR_MASS[7];
-  dtostrf(DSM501A_data.particleMass,2, 2, CHAR_MASS); // Pasa el double a char.
-  float PRESURE_LOG     = atof (CHAR_PRESURE);
-  float MASS_LOG        = atof (CHAR_MASS);
-*/
-  ThingSpeak.setField(1,TEMPERATURE_LOG);
-  ThingSpeak.setField(2,PRESURE_LOG);
-  ThingSpeak.setField(3,DSM501A_data.CONCENTRATION);
-  ThingSpeak.setField(4,DSM501A_data.RATIO);
-  ThingSpeak.setField(5,MASS_LOG);
-  ThingSpeak.setField(6,MiCS_6814_data.CO);
-  ThingSpeak.setField(7,MiCS_6814_data.NO2);
-  ThingSpeak.setField(8,MiCS_6814_data.CH4);
- // Write the fields that you've set all at once.
-  ThingSpeak.writeFields(thingspeak_channel_number_C, writeAPIKey_C);  
-   Serial.print("Temperatura => ");
-   Serial.print(BMP180_data.TEMPERATURE);
-   Serial.print(" ");
-   Serial.print(TEMPERATURE_LOG);
-   Serial.print(" Presion => ");
-   Serial.print(BMP180_data.P_mBa,4);
-   Serial.print(" ");
-   Serial.print(PRESURE_LOG, 4);
-   Serial.print(" Masa => ");
-   Serial.print(DSM501A_data.particleMass, 4);
-   Serial.print(" ");
-   Serial.println(MASS_LOG, 4);
+   unsigned long thingspeak_channel_number_C = 101717;
+   const char * writeAPIKey_C = "7J5F3NW8FDLOJDX8";
+   // Se pasan las variables a float.
+   float TEMPERATURE_LOG = (float) BMP180_data.TEMPERATURE;
+   float PRESURE_LOG     = (float) BMP180_data.P_mBa;
+   float MASS_LOG        = (float) DSM501A_data.particleMass;
+
+   // Actualiza los campos.
+   ThingSpeak.setField(1,TEMPERATURE_LOG);
+   ThingSpeak.setField(2,PRESURE_LOG);
+   ThingSpeak.setField(3,DSM501A_data.CONCENTRATION);
+   ThingSpeak.setField(4,DSM501A_data.RATIO);
+   ThingSpeak.setField(5,MASS_LOG);
+   ThingSpeak.setField(6,MiCS_6814_data.NO2);
+   ThingSpeak.setField(7,MiCS_6814_data.CO);
+   ThingSpeak.setField(8,MiCS_6814_data.CH4);
+  
+   // Escribe los campos que se han actualizado.
+   ThingSpeak.writeFields(thingspeak_channel_number_C, writeAPIKey_C);  
     
   }  //updateThingSpeak_1
 
@@ -741,7 +725,7 @@ void updateemoncms()
 {  
    char emoncms_Address[] = "emoncms.org";
    // THIS IS THE DEVICE ID FROM PUSHINGBOX
-   char emoncms_ID[] = "cca68e0f95bf2fbb3cd12ba92ae64b38";
+   char emoncms_APIKEY[] = "cca68e0f95bf2fbb3cd12ba92ae64b38";
    //Connect to wifi
    //Unique node, kind of unique sensor number
    int node;
@@ -750,41 +734,42 @@ void updateemoncms()
    Serial.print(" emoncms: ");
    if (client.connect("emoncms.org", httpPort)) 
    {
-      Serial.println("Connected to server");
-      // If there's a successful connection
-      // Build the data field, create a json_url for the Barometer
+      //Serial.print("Connected to server");
+      // Si la conexi?n se ha realizado.
+      // Genera el formulario JSON para los datos del Bar?metro.
       node = 1;
       String json_url_1 = " /input/post.json?node=" + String(node) + 
               "&json={Temperatura:" + String(BMP180_data.TEMPERATURE) +  
                         ",Presion:" + String(BMP180_data.P_mBa) +  
-              "}&apikey=" + emoncms_ID; 
-      // Build the data field, create a json_url for the Dust Sensor
+              "}&apikey=" + emoncms_APIKEY; 
+      // Genera el formulario JSON para los datos del Sensor de Part?culas.
       node = 2;
       String json_url_2 = " /input/post.json?node=" + String(node) + 
               "&json={Concentration:" + String(DSM501A_data.CONCENTRATION) +  
-              "}&apikey=" + emoncms_ID; 
+              "}&apikey=" + emoncms_APIKEY; 
       String json_url_3 = " /input/post.json?node=" + String(node) + 
               "&json={Ratio:" + String(DSM501A_data.RATIO) +  
                              ",Masa:" + String(DSM501A_data.particleMass) +  
-              "}&apikey=" + emoncms_ID; 
+              "}&apikey=" + emoncms_APIKEY; 
       node = 3;
-      // Build the data field, the json_url for the Multichanel Gas Sensor
+      // Genera el formulario JSON para los datos del Multichanel Gas Sensor.
       String json_url_4 = " /input/post.json?node=" + String(node) + 
               "&json={CO:" + String(MiCS_6814_data.CO) +  
                    ",NO2:" + String(MiCS_6814_data.NO2) +  
                    ",CH4:" + String(MiCS_6814_data.CH4) +  
-              "}&apikey=" + emoncms_ID; 
+              "}&apikey=" + emoncms_APIKEY; 
  
-      String host = "Host: emoncms.org\n";
   
-      // This will send the request to the server
+      String host = "Host: emoncms.org\n";
+
+      // Cadena para mandar los datos del bar?metro al servidor
       String requestString = String("GET ") + json_url_1  + " HTTP/1.1\n"+ host + "Connection: close\r\n\r\n";
      // Serial.print("Request String: " + requestString);
-      client.print(requestString ); //Send request to server
+      client.print(requestString ); // Manda la petici?n HTTP al servidor.
   //Serial.println("********* Response 1 *********");
   //Wait for server to respond and print '-'
   while(!client.available()) {
-    Serial.print("-");
+    Serial.print(" ");
     delay(200); 
   }
 
@@ -792,7 +777,7 @@ void updateemoncms()
   while(client.available()){
 //    Serial.write(client.read());
       String line = client.readStringUntil('\r');
-      Serial.print(".");
+//      Serial.print(".");
   }
 
   if (!client.connect("emoncms.org", httpPort)) {
@@ -801,7 +786,7 @@ void updateemoncms()
   }
 
       delay(1000);
-      // This will send the request to the server
+      // Cadena para mandar los datos del sensor de part?culas al servidor
       requestString = String("GET ") + json_url_2  + " HTTP/1.1\n"+ host + "Connection: close\r\n\r\n";
 //      Serial.print("Request String: " + requestString);
       client.print(requestString );
@@ -809,7 +794,7 @@ void updateemoncms()
   //Serial.println("********* Response 2 *********");
   //Wait for server to respond and print '-'
   while(!client.available()) {
-    Serial.print("-");
+    Serial.print(" ");
     delay(200); 
   }
 
@@ -825,14 +810,14 @@ void updateemoncms()
     return;
   }
       delay(1000);
-      // This will send the request to the server
+      // Cadena para mandar los datos del multichanel gas sensor al servidor
       requestString = String("GET ") + json_url_3  + " HTTP/1.1\n"+ host + "Connection: close\r\n\r\n";
 //      Serial.print("Request String: " + requestString);
       client.print(requestString );
   //Serial.println("********* Response 3 *********");
   //Wait for server to respond and print '-'
   while(!client.available()) {
-    Serial.print("-");
+    Serial.print(" ");
     delay(200); 
   }
 
@@ -938,8 +923,8 @@ void loop() {
       {
          case 1:
             // Upload the data to Carriots.
-//            updateCarriots();
-            updateThingSpeak_1();
+            updateCarriots();
+//            updateThingSpeak_1();
             // Reset the variable.
             uploadCounter = 2;
             break;
@@ -947,20 +932,23 @@ void loop() {
          case 2:
             // Upload the Monitor data.
 //            updatePushingbox();
-            updateThingSpeak_1();
+            updateCarriots();
+//            updateThingSpeak_1();
             // Change variable value.
             uploadCounter = 3;
             break;
 
          case 3:
             // Upload the Monitor data.
-            updateThingSpeak_1();
+            updateCarriots();
+//            updateThingSpeak_1();
             // Change variable value.
             uploadCounter = 4;
             break;
          case 4:
             // Upload the Monitor data.
             updateemoncms();
+//            updateCarriots();
 //            updateThingSpeak_1();
             // Change variable value.
             uploadCounter = 1;
