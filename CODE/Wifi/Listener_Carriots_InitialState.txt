@@ -1,0 +1,49 @@
+import com.carriots.sdk.utils.BasicHttp;
+def basicHttp = new BasicHttp();
+basicHttp.url ="https://groker.initialstate.com/api/events";
+basicHttp.verb ="POST";
+def access_key = "loU2VHmag9u57eaJPtxeXmimNoG1gO9g";
+def content_type = "application/json";
+def bucketKey = "EU8KYDFFEXMS";
+map= ["X-IS-AccessKey" : access_key,
+"X-IS-BucketKey": bucketKey,"Content-Type":content_type];
+
+// Listener de Temperatura
+basicHttp.headers=map;
+basicHttp.payload ='[{"key":"Temperatura","value":"' + context.data.Temperatura + '"}]';
+basicHttp.send();
+
+// Listener de Presión
+basicHttp.headers=map;
+basicHttp.payload ='[{"key":"Presion","value":"' + context.data.Presion + '"}]';
+basicHttp.send();
+
+// Listener de Concentración
+basicHttp.headers=map;
+basicHttp.payload ='[{"key":"Concentracion","value":"' + context.data.Concentracion + '"}]';
+basicHttp.send();
+
+// Listener de Ratio
+basicHttp.headers=map;
+basicHttp.payload ='[{"key":"Ratio","value":"' + context.data.Ratio + '"}]';
+basicHttp.send();
+
+// Listener de Masa
+basicHttp.headers=map;
+basicHttp.payload ='[{"key":"Masa","value":"' + context.data.Masa + '"}]';
+basicHttp.send();
+
+// Listener de Monoxido
+basicHttp.headers=map;
+basicHttp.payload ='[{"key":"Monoxido","value":"' + context.data.Monoxido + '"}]';
+basicHttp.send();
+
+// Listener de Dioxido
+basicHttp.headers=map;
+basicHttp.payload ='[{"key":"Dioxido","value":"' + context.data.Dioxido + '"}]';
+basicHttp.send();
+
+// Listener de Metano
+basicHttp.headers=map;
+basicHttp.payload ='[{"key":"Metano","value":"' + context.data.Metano + '"}]';
+basicHttp.send();

@@ -42,19 +42,18 @@ const char* password  = "%yatengowifi%";
 WiFiClient client;
 
 // Variable Setup to manage the readings and connections.
-long      lastConnectionTime = 0;
-long      lastReadingTime    = 0;
-int       failedCounter      = 0;
-boolean   lastConnected      = false;
-int       uploadCounter      = 1;
-int       blinkCounter       = 1;
-int       timeout;
+long    lastConnectionTime = 0;
+long    lastReadingTime    = 0;
+int     failedCounter      = 0;
+boolean lastConnected      = false;
+int     uploadCounter      = 1;
+int     blinkCounter       = 1;
 const int httpPort         = 80;
 
 // Time interval in milliseconds to update ThingSpeak (number of seconds * 1000 = interval)
 
 const int DataUploadInterval_C  = 60 * 1000;
-const int DataReadInterval_C    = 15 * 1000;
+const int DataReadInterval_C    = 30 * 1000;
 
 // BMP180: Variable declaration for the BMP180 barometer.
 SFE_BMP180 pressure;
@@ -76,6 +75,7 @@ BMP180_type BMP180_data;
 
 typedef struct DSM501A_type
 {
+  // byte buff[2];
    unsigned long DURATION;
    unsigned long START_TIME;
    unsigned long END_TIME;
@@ -130,7 +130,7 @@ void setup() {
    Serial.println();
 
    Serial.println("*********************************");
-   Serial.println("* Iniciando WEMOS D1 R2.");
+   Serial.println("* Iniciando WEMOS.");
    Serial.println("*");
    Serial.print("* WiFi connecting to ");
    Serial.print(WIFI_ssid);
@@ -193,7 +193,7 @@ void Start_BMP180_Sensor() {
       BMP180_data.STATUS = pressure.getTemperature(BMP180_data.TEMPERATURE);
       if (BMP180_data.STATUS != 0)
       {
-         // Pressure initialization.
+        // Pressure initialization.
          BMP180_data.STATUS = pressure.startPressure(3);
          if (BMP180_data.STATUS != 0)
          {
@@ -212,10 +212,9 @@ void Start_BMP180_Sensor() {
 
 // Subprograma para leer el sensor de partículas DSM501A: Concentracion y masa de partículas..
 void Read_Dust_Sensor() {
-
-   DSM501A_data.DURATION = pulseIn(D8, LOW);  // Se mide el periodo de un solo pulso bajo.
-   DSM501A_data.LOW_PULSE_OCCUPANCY += DSM501A_data.DURATION; // Mide el tiempo total del pulso bajo.
-   DSM501A_data.END_TIME = millis();
+      DSM501A_data.DURATION = pulseIn(D8, LOW);  // Se mide el periodo de un solo pulso bajo.
+      DSM501A_data.LOW_PULSE_OCCUPANCY += DSM501A_data.DURATION; // Mide el tiempo total del pulso bajo.
+      DSM501A_data.END_TIME = millis();
 
    if (( DSM501A_data.END_TIME - DSM501A_data.START_TIME) > DSM501A_data.SAMPLE_TIME)
    {
@@ -315,8 +314,8 @@ void Read_Barometer( ){
   
 }
 
-// Subprograma para leer el Mutichannel Gas Sensor MiCS-6814 : 
-// NH3, CO, NO2, C3H8, C4H10, CH4, H2 y C2H5OH
+// Subprogram to read the MiCS-6814 Mutichannel Gas Sensor: 
+//  NH3, CO, NO2, C3H8, C4H10, CH4, H2 and C2H5OH
 void Read_Multichanel_Gas_Sensor()
 {
     Serial.print(millis());
@@ -371,7 +370,7 @@ void updateCarriots()
 {
 
    // Declaracion de variables para Carriots
-   const String Carriots_APIKEY = "5917b4cb109c087d1707f6179cc5593f6656c663f8a897469601632488c46611"; 
+      const String Carriots_APIKEY = "5917b4cb109c087d1707f6179cc5593f6656c663f8a897469601632488c46611"; 
    const String DEVICE = "ProyectoArduino@pinfocal.pinfocal"; 
    IPAddress carriotsAddress(82,223,244,60);  // api.carriots.com IP Address
 
@@ -383,14 +382,14 @@ void updateCarriots()
       // Si hay conexion con la red, construye el formulario
       String json_url = 
          "{\"protocol\":\"v2\",\"device\":\""+DEVICE+
-         "\",\"at\":\"now\",\"data\":{\"Temperatura\":\""+BMP180_data.TEMPERATURE+
-         "\",\"Presion\":\""+BMP180_data.P_mBa+
-         "\",\"Concentracion\":\""+DSM501A_data.CONCENTRATION+
-         "\",\"Ratio\":\""+DSM501A_data.RATIO+
-         "\",\"Masa\":\""+DSM501A_data.particleMass+
-         "\",\"Monoxido\":\""+MiCS_6814_data.CO+
-         "\",\"Nitrato\":\""+MiCS_6814_data.NO2+
-         "\",\"Metano\":\""+MiCS_6814_data.CH4+"\"}}";              
+          "\",\"at\":\"now\",\"data\":{\"Temperatura\":\""+BMP180_data.TEMPERATURE+
+          "\",\"Presion\":\""+BMP180_data.P_mBa+
+          "\",\"Concentracion\":\""+DSM501A_data.CONCENTRATION+
+          "\",\"Ratio\":\""+DSM501A_data.RATIO+
+          "\",\"Masa\":\""+DSM501A_data.particleMass+
+          "\",\"Monoxido\":\""+MiCS_6814_data.CO+
+          "\",\"Nitrato\":\""+MiCS_6814_data.NO2+
+          "\",\"Metano\":\""+MiCS_6814_data.CH4+"\"}}";              
               
       // Se hace la HTTP request
       client.println("POST /streams HTTP/1.1");
@@ -433,8 +432,7 @@ void updateCarriots()
       Serial.println();
       lastConnectionTime = millis();
    }
-   
-   timeout = millis() + 5000;
+   int timeout = millis() + 5000;
 
    while (client.available() == 0)
    {
@@ -460,9 +458,9 @@ void updatePushingbox()
 {
    Serial.print(millis());
    char pushingbox_Address[] = "api.pushingbox.com";
-   
    // THIS IS THE DEVICE ID FROM PUSHINGBOX
    char pushingbox_ID[] = "vC6A8513890F3CEF";
+   //char pushingbox_ID[] = "vEBD38E81685020D";
    
    char pushingbox_msg[100];
 
@@ -482,7 +480,8 @@ void updatePushingbox()
       char str8[10];
       char str9[10];
       char str10[10];
-      
+      //Serial.println("........1..");
+
       data="";
       data+="";
       
@@ -529,9 +528,9 @@ void updatePushingbox()
       data+=" ";
       data+="&entry.2131645315=";
       data+=CHAR_TEMPERATURE;
+ */
      data=data+"&Todo="+" "+"&entry.2131645315="+CHAR_TEMPERATURE+"&entry.468221150="+CHAR_P_mBa;
-*/
- 
+
       data+="&status=25";
       data+= "&&submit=Submit";
 
@@ -573,8 +572,7 @@ void updatePushingbox()
       Serial.println();
       lastConnectionTime = millis();
    }
-   
-   timeout = millis() + 5000;
+   int timeout = millis() + 5000;
 
    while (client.available() == 0)
    {
@@ -591,6 +589,7 @@ void updatePushingbox()
    {
       String line = client.readStringUntil('\r');
       Serial.print(".");
+      //Serial.print(line);
    }
 
    Serial.println(" OK.");
@@ -624,13 +623,9 @@ void updateThingSpeak()
    // Write the fields that you've set all at once.
    ThingSpeak.writeFields(thingspeak_channel_number_C, writeAPIKey_C);  
    
-   // Escribe en la pantalla.
-   Serial.println("Subiendo Datos............ OK.");
-
-   // Actualiza la variable lastConnectionTime
-   lastConnectionTime = millis();
+   Serial.print("Subiendo Datos............ OK.");
       
-}  //updateThingSpeak
+  }  //updateThingSpeak
 
 
 void updateemoncms()
@@ -644,10 +639,11 @@ void updateemoncms()
    int node;
 
    Serial.print(millis());
-   Serial.print(" Emoncms   : ");
+   Serial.print(" emoncms: ");
    if (client.connect("emoncms.org", httpPort)) 
    {
-      // Si la conexion se ha realizado.
+      //Serial.print("Connected to server");
+      // Si la conexi?n se ha realizado.
       // Genera el formulario JSON para los datos del Bar?metro.
       node = 1;
       String json_url_1 = " /input/post.json?node=" + String(node) + 
@@ -676,69 +672,79 @@ void updateemoncms()
   
       // Cadena para mandar los datos del barometro al servidor
       String requestString = String("GET ") + json_url_1  + " HTTP/1.1\n"+ host + "Connection: close\r\n\r\n";
-      // Serial.print("Request String: " + requestString);
+     // Serial.print("Request String: " + requestString);
       client.print(requestString ); // Manda la peticion HTTP al servidor.
- 
-      //Wait for server to respond and print '-'
-      while(!client.available()) {
-         Serial.print(" ");
-         delay(200); 
-      }
+  //Serial.println("********* Response 1 *********");
+  //Wait for server to respond and print '-'
+  while(!client.available()) {
+    Serial.print(" ");
+    delay(200); 
+  }
 
-      //Write out what the server responds with
-      while(client.available()){
-         String line = client.readStringUntil('\r');
-      }
+  //Write out what the server responds with
+  while(client.available()){
+//    Serial.write(client.read());
+      String line = client.readStringUntil('\r');
+//      Serial.print(".");
+  }
 
-      if (!client.connect("emoncms.org", httpPort)) {
-         Serial.println("connection failed");
-         return;
-      }
+  if (!client.connect("emoncms.org", httpPort)) {
+    Serial.println("connection failed");
+    return;
+  }
 
       delay(1000);
       // Cadena para mandar los datos del sensor de part?culas al servidor
       requestString = String("GET ") + json_url_2  + " HTTP/1.1\n"+ host + "Connection: close\r\n\r\n";
+//      Serial.print("Request String: " + requestString);
       client.print(requestString );
 
-      //Wait for server to respond and print '-'
-      while(!client.available()) {
-         Serial.print(" ");
-         delay(200); 
-      }
+  //Serial.println("********* Response 2 *********");
+  //Wait for server to respond and print '-'
+  while(!client.available()) {
+    Serial.print(" ");
+    delay(200); 
+  }
 
-      //Write out what the server responds with
-      while(client.available()){
-         String line = client.readStringUntil('\r');
-      }
+  //Write out what the server responds with
+  while(client.available()){
+//    Serial.write(client.read());
+      String line = client.readStringUntil('\r');
+      Serial.print(".");
+  }
 
-      if (!client.connect("emoncms.org", httpPort)) {
-         Serial.println("connection failed");
-         return;
-      }
-   
+  if (!client.connect("emoncms.org", httpPort)) {
+    Serial.println("connection failed");
+    return;
+  }
       delay(1000);
       // Cadena para mandar los datos del multichanel gas sensor al servidor
       requestString = String("GET ") + json_url_3  + " HTTP/1.1\n"+ host + "Connection: close\r\n\r\n";
+//      Serial.print("Request String: " + requestString);
       client.print(requestString );
-      //Wait for server to respond and print '-'
-      while(!client.available()) {
-         Serial.print(" ");
-         delay(200); 
-      }
+  //Serial.println("********* Response 3 *********");
+  //Wait for server to respond and print '-'
+  while(!client.available()) {
+    Serial.print(" ");
+    delay(200); 
+  }
 
-      //Write out what the server responds with
-      while(client.available()){
-         String line = client.readStringUntil('\r');
-      }
+  //Write out what the server responds with
+  while(client.available()){
+//    Serial.write(client.read());
+      String line = client.readStringUntil('\r');
+      Serial.print(".");
+  }
 
-      if (!client.connect("emoncms.org", httpPort)) {
-         Serial.println("connection failed");
-         return;
-      }
+  if (!client.connect("emoncms.org", httpPort)) {
+    Serial.println("connection failed");
+    return;
+  }
 
       delay(1000);
       // This will send the request to the server
       requestString = String("GET ") + json_url_4  + " HTTP/1.1\n"+ host + "Connection: close\r\n\r\n";
+//      Serial.print("Request String: " + requestString);
       client.print(requestString );
 
       delay(1000);
@@ -766,8 +772,7 @@ void updateemoncms()
       Serial.println();
       lastConnectionTime = millis();
    }
-   
-   timeout = millis() + 5000;
+   int timeout = millis() + 5000;
 
    while (client.available() == 0)
    {
@@ -784,6 +789,7 @@ void updateemoncms()
    {
       String line = client.readStringUntil('\r');
       Serial.print(".");
+      //Serial.print(line);
    }
 
    Serial.println(" OK.");
@@ -791,39 +797,39 @@ void updateemoncms()
 
 void loop() {
 
-   // Los sensores se leen cada 30 segundos cuando el WeMos no está subiendo datos.
+  // Sensors are only read when the arduino is not uploading data to the network.
+  
    if(!client.connected() && (millis() - lastReadingTime > DataReadInterval_C))
    {
 
-      // Lee el barometro BMP180
+      //Read the BMP180 barometer
       Read_Barometer();
       delay(5000);
 
-      // Lee el sensor de particulas DSM501A.
+      //Read the DSM501A dust sensor
       Read_Dust_Sensor();
       delay(5000);
 
-      //  Lee el sensor de gases MiCS-6814 Mutichannel Gas Sensor: 
-      //  NH3, CO, NO2, C3H8, C4H10, CH4, H2 and C2H5OH.
+      // Read the MiCS-6814 Mutichannel Gas Sensor: 
+      //  NH3, CO, NO2, C3H8, C4H10, CH4, H2 and C2H5OH
       Read_Multichanel_Gas_Sensor();
       delay(5000);
 	  
 	  // Actualiza el parametro lastReadingTime.
 	  lastReadingTime = millis (); 
-
-      // Incluye un retorno de carro para visualizar la subida.
-      Serial.println("");
-
    }
-
-   // Sube datos al servidor de IoT.
+   else
+   {
+      Serial.println(" client connected");
+   }
+   // Update data to the IoT server
    if(!client.connected() && (millis() - lastConnectionTime > DataUploadInterval_C))
    {
-      // Actualiza el contador de blinks.
+      //Set the number of blinks counter.
       blinkCounter = uploadCounter;
 
-      // Incluye un retorno de carro para visualizar la subida.
-      Serial.println("");
+      //Serial.print(" uploadCounter: ");
+      //Serial.println(uploadCounter);
 
       switch (uploadCounter)
       {
@@ -869,10 +875,6 @@ void loop() {
          digitalWrite(BUILTIN_LED, HIGH);  // Apaga el LED con voltaje HIGH
          delay(1000);                      // Esperar un segundo
       }
-
-      // Incluye un retorno de carro para visualizar la subida.
-      Serial.println("");
-   
    }
    // Chequear si hay que hacer restart en el WiFi del WeMos
    if (failedCounter > 3 )
@@ -881,5 +883,4 @@ void loop() {
    }
 
    lastConnected = client.connected();
-
 } //end loop
